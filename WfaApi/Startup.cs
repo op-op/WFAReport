@@ -11,14 +11,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using WfaApi.Extensions;
 
 namespace WfaApi
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly IConfiguration _config;
+        public Startup(IConfiguration config)
         {
-            Configuration = configuration;
+            _config = config;
         }
 
         public IConfiguration Configuration { get; }
@@ -27,7 +29,11 @@ namespace WfaApi
         public void ConfigureServices(IServiceCollection services)
         {
 
+            services.AddApplicationServices(_config);
             services.AddControllers();
+            services.AddCors();
+            services.AddIdentityServices(_config);
+            
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "WfaApi", Version = "v1" });
@@ -47,6 +53,10 @@ namespace WfaApi
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseCors(x =>x.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:4200"));
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
